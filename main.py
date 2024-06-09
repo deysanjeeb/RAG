@@ -4,14 +4,10 @@ import json
 import os
 from io import BytesIO
 import re
-
 import ollama
 import chromadb
 import numpy as np
-import os
-import pathlib
 import streamlit as st
-import datetime
 from dotenv import load_dotenv
 
 
@@ -75,18 +71,6 @@ def QnAextract(client,doc):
     return(chat_completion.choices[0].message.content)
 
 
-
-# printing number of pages in pdf file 
-print(len(reader.pages)) 
-client = chromadb.PersistentClient(os.getcwd())
-collection = client.create_collection(name="docs")
-# collection = client.get_collection(name='docs')
-# creating a page object 
-page = reader.pages[2]
-text = page.extract_text()
-text = text.replace('\n',' ')
-QnA = QnAextract(groq,text)
-
 def extractJSON(res):
     json_object_match = re.search(r'\{.*\}', res, re.DOTALL)
 
@@ -104,7 +88,13 @@ def extractJSON(res):
         print("No JSON object found in the text.")
 
 
+
+
+client = chromadb.PersistentClient(os.getcwd())
+collection = client.create_collection(name="docs")
+# collection = client.get_collection(name='docs')
 # if not os.path.exists(os.getcwd()+'\chroma.sqlite3'):
+index=0
 for j in range(2,len(reader.pages)):
     page = reader.pages[j] 
     text = page.extract_text()
@@ -113,19 +103,19 @@ for j in range(2,len(reader.pages)):
     QnA = QnAextract(groq,text)
     clean = extractJSON(QnA)
     for i,pair in enumerate(clean["question_answer_pairs"]):
-        print(i)
+        index = index + i        
         text = pair["question"] + " " + pair["answer"]
         print(text)
         response = ollama.embeddings(model="mxbai-embed-large", prompt=text)
         embedding = response["embedding"]
         collection.add(
-            ids=[str(i)],
+            ids=[str(index)],
             embeddings=[embedding],
             documents=[text]
-    )
-
+        )
+    index = index + 1
+    
 
 # prompt = st.chat_input("Say something")
 # if prompt:
 #     st.write(f"User has sent the following prompt: {prompt}")
-
