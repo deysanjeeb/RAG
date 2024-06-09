@@ -113,6 +113,8 @@ for j in range(2,len(reader.pages)):
     QnA = QnAextract(groq,text)
     clean = extractJSON(QnA)
     for i, d in enumerate(text):
+        print("i ",i)
+        print("d ",d)
         response = ollama.embeddings(model="mxbai-embed-large", prompt=d)
         embedding = response["embedding"]
         collection.add(
