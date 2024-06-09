@@ -79,7 +79,7 @@ def QnAextract(client,doc):
 # printing number of pages in pdf file 
 print(len(reader.pages)) 
 client = chromadb.PersistentClient(os.getcwd())
-# collection = client.create_collection(name="docs")
+collection = client.create_collection(name="docs")
 # collection = client.get_collection(name='docs')
 # creating a page object 
 page = reader.pages[2]
@@ -112,15 +112,16 @@ for j in range(2,len(reader.pages)):
     # print(text)
     QnA = QnAextract(groq,text)
     clean = extractJSON(QnA)
-    for i, d in enumerate(text):
-        print("i ",i)
-        print("d ",d)
-        response = ollama.embeddings(model="mxbai-embed-large", prompt=d)
+    for i,pair in enumerate(clean["question_answer_pairs"]):
+        print(i)
+        text = pair["question"] + " " + pair["answer"]
+        print(text)
+        response = ollama.embeddings(model="mxbai-embed-large", prompt=text)
         embedding = response["embedding"]
         collection.add(
             ids=[str(i)],
             embeddings=[embedding],
-            documents=[d]
+            documents=[text]
     )
 
 
