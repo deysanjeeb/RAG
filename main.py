@@ -86,36 +86,40 @@ page = reader.pages[2]
 text = page.extract_text()
 text = text.replace('\n',' ')
 QnA = QnAextract(groq,text)
-# print(QnA)
-json_object_match = re.search(r'\{.*\}', QnA, re.DOTALL)
 
-if json_object_match:
-    json_object = json_object_match.group()
-    try:
-        # Parse JSON to ensure it is valid
-        parsed_json = json.loads(json_object)
-        # Print the JSON object
-        print(json.dumps(parsed_json, indent=2))
-    except json.JSONDecodeError:
-        print("The extracted text is not a valid JSON object.")
-else:
-    print("No JSON object found in the text.")
+def extractJSON(res):
+    json_object_match = re.search(r'\{.*\}', res, re.DOTALL)
+
+    if json_object_match:
+        json_object = json_object_match.group()
+        try:
+            # Parse JSON to ensure it is valid
+            parsed_json = json.loads(json_object)
+            # Print the JSON object
+            print(json.dumps(parsed_json, indent=2))
+            return parsed_json
+        except json.JSONDecodeError:
+            print("The extracted text is not a valid JSON object.")
+    else:
+        print("No JSON object found in the text.")
+
+
 # if not os.path.exists(os.getcwd()+'\chroma.sqlite3'):
-#     for j in range(2,len(reader.pages)):
-#         page = reader.pages[j] 
-#         text = page.extract_text()
-#         text = text.replace('\n',' ')
-#         # print(text)
-#         QnA = QnAextract(groq,text)
-        # print(QnA)
-        # for i, d in enumerate(text):
-        #     response = ollama.embeddings(model="mxbai-embed-large", prompt=d)
-        #     embedding = response["embedding"]
-        #     collection.add(
-        #         ids=[str(i)],
-        #         embeddings=[embedding],
-        #         documents=[d]
-        # )
+for j in range(2,len(reader.pages)):
+    page = reader.pages[j] 
+    text = page.extract_text()
+    text = text.replace('\n',' ')
+    # print(text)
+    QnA = QnAextract(groq,text)
+    clean = extractJSON(QnA)
+    for i, d in enumerate(text):
+        response = ollama.embeddings(model="mxbai-embed-large", prompt=d)
+        embedding = response["embedding"]
+        collection.add(
+            ids=[str(i)],
+            embeddings=[embedding],
+            documents=[d]
+    )
 
 
 # prompt = st.chat_input("Say something")
