@@ -9,6 +9,7 @@ import ollama
 import chromadb
 import numpy as np
 import os
+import pathlib
 
 
 
@@ -37,9 +38,8 @@ print(text)
 
 text = text.replace('\n',' ').split('?')
 print((text))
-client = chromadb.Client()
+client = chromadb.PersistentClient(os.getcwd())
 collection = client.create_collection(name="docs")
-
 # store each document in a vector embedding database
 for i, d in enumerate(text):
     response = ollama.embeddings(model="mxbai-embed-large", prompt=d)
