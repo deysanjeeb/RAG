@@ -39,7 +39,11 @@ print(text)
 text = text.replace('\n',' ').split('?')
 print((text))
 client = chromadb.PersistentClient(os.getcwd())
-collection = client.create_collection(name="docs")
+
+if not os.path.exists(os.get_cwd()+'chroma.sqlite3'):
+    collection = client.create_collection(name="docs")
+else:
+    collection = client.get_collection()
 # store each document in a vector embedding database
 for i, d in enumerate(text):
     response = ollama.embeddings(model="mxbai-embed-large", prompt=d)
