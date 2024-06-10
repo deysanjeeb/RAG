@@ -2,11 +2,9 @@ from pypdf import PdfReader
 from groq import Groq
 import json
 import os
-from io import BytesIO
 import re
 import ollama
 import chromadb
-import numpy as np
 import streamlit as st
 from dotenv import load_dotenv
 from time import sleep
@@ -19,7 +17,7 @@ reader = PdfReader(os.getcwd()+"/pdfs/policy-booklet-0923.pdf")
 groq = Groq(api_key=api_key)
 
 
-def QnAextract(client,doc):
+def QnAextract(client, doc):
     chat_completion = client.chat.completions.create(
         messages=[
             {
@@ -92,23 +90,21 @@ def extractJSON(res):
         raise ValueError("No JSON object found in the text.")
 
 
-
-
 client = chromadb.PersistentClient(os.getcwd())
 collections = client.list_collections()
 print(collections)
 collection = client.get_or_create_collection(name="my_collection")
-if collection.count()==0:
-    index=0
+if collection.count() == 0:
+    index = 0
     for j in range(2,len(reader.pages)):
-        print("page: ",j)
+        print("page: ", j)
         page = reader.pages[j] 
         text = page.extract_text()
-        text = text.replace('\n',' ')
+        text = text.replace('\n', ' ')
         # print(text)
         for attempt in range(3):
             try:
-                QnA = QnAextract(groq,text)
+                QnA = QnAextract(groq, text)
                 print(QnA)
                 clean = extractJSON(QnA)
                 break
@@ -116,11 +112,11 @@ if collection.count()==0:
                 print(f"Attempt {attempt+1} failed with error")
                 if attempt == 2:  # If this was the last attempt, re-raise the exception
                     raise
-        key=[]
+        key = []
         for k in clean.keys():
             key.append(k)
         # print(key[0])
-        for i,pair in enumerate(clean[key[0]]):
+        for i, pair in enumerate(clean[key[0]]):
             index = index + i        
             text = pair["question"] + " " + pair["answer"]
             # print(text)
@@ -150,7 +146,7 @@ if prompt:
         messages=[
             {
                 "role": "user",
-                "content":f"Using this data: {data}. Respond to this prompt: {prompt}"
+                "content": f"Using this data: {data}. Respond to this prompt: {prompt}"
             }
             ],
             model="llama3-8b-8192",
