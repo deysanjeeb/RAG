@@ -9,7 +9,7 @@ import chromadb
 import numpy as np
 import streamlit as st
 from dotenv import load_dotenv
-
+from time import sleep
 
 load_dotenv()
 api_key = os.getenv('GROQ_API_KEY')
@@ -91,31 +91,35 @@ def extractJSON(res):
 
 
 client = chromadb.PersistentClient(os.getcwd())
-collection = client.create_collection(name="docs")
-# collection = client.get_collection(name='docs')
-# if not os.path.exists(os.getcwd()+'\chroma.sqlite3'):
-index=0
-for j in range(2,len(reader.pages)):
-    page = reader.pages[j] 
-    text = page.extract_text()
-    text = text.replace('\n',' ')
-    # print(text)
-    QnA = QnAextract(groq,text)
-    clean = extractJSON(QnA)
-    for i,pair in enumerate(clean["question_answer_pairs"]):
-        index = index + i        
-        text = pair["question"] + " " + pair["answer"]
-        print(text)
-        response = ollama.embeddings(model="mxbai-embed-large", prompt=text)
-        embedding = response["embedding"]
-        collection.add(
-            ids=[str(index)],
-            embeddings=[embedding],
-            documents=[text]
-        )
-    index = index + 1
+collections = client.list_collections()
+print(collections)
+if 'docs' in collections:
+    collection = client.get_collection('docs')
+else:
+    collection = client.create_collection("docs")
+    index=0
+    for j in range(2,len(reader.pages)):
+        page = reader.pages[j] 
+        text = page.extract_text()
+        text = text.replace('\n',' ')
+        # print(text)
+        QnA = QnAextract(groq,text)
+        clean = extractJSON(QnA)
+        for i,pair in enumerate(clean["question_answer_pairs"]):
+            index = index + i        
+            text = pair["question"] + " " + pair["answer"]
+            print(text)
+            response = ollama.embeddings(model="mxbai-embed-large", prompt=text)
+            embedding = response["embedding"]
+            collection.add(
+                ids=[str(index)],
+                embeddings=[embedding],
+                documents=[text]
+            )
+        index = index + 1
+        sleep(15)
     
 
-# prompt = st.chat_input("Say something")
-# if prompt:
-#     st.write(f"User has sent the following prompt: {prompt}")
+prompt = st.chat_input("Say something")
+if prompt:
+    st.write(f"User has sent the following prompt: {prompt}")
