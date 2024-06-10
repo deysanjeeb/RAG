@@ -1,0 +1,5 @@
+groq
+pypdf
+ollama
+chromadb
+streamlit
