@@ -97,43 +97,42 @@ def extractJSON(res):
 client = chromadb.PersistentClient(os.getcwd())
 collections = client.list_collections()
 print(collections)
-collection = client.get_collection('docs')
-# else:
-#     collection = client.create_collection("docs")
-#     index=0
-#     for j in range(2,len(reader.pages)):
-#         print("page: ",j)
-#         page = reader.pages[j] 
-#         text = page.extract_text()
-#         text = text.replace('\n',' ')
-#         # print(text)
-#         for attempt in range(3):
-#             try:
-#                 QnA = QnAextract(groq,text)
-#                 print(QnA)
-#                 clean = extractJSON(QnA)
-#                 break
-#             except:
-#                 print(f"Attempt {attempt+1} failed with error")
-#                 if attempt == 2:  # If this was the last attempt, re-raise the exception
-#                     raise
-#         key=[]
-#         for k in clean.keys():
-#             key.append(k)
-#         # print(key[0])
-#         for i,pair in enumerate(clean[key[0]]):
-#             index = index + i        
-#             text = pair["question"] + " " + pair["answer"]
-#             # print(text)
-#             response = ollama.embeddings(model="mxbai-embed-large", prompt=text)
-#             embedding = response["embedding"]
-#             collection.add(
-#                 ids=[str(index)],
-#                 embeddings=[embedding],
-#                 documents=[text]
-#             )
-#         index = index + 1
-#         sleep(15)
+collection = client.get_or_create_collection(name="my_collection")
+if collection.count()==0:
+    index=0
+    for j in range(2,len(reader.pages)):
+        print("page: ",j)
+        page = reader.pages[j] 
+        text = page.extract_text()
+        text = text.replace('\n',' ')
+        # print(text)
+        for attempt in range(3):
+            try:
+                QnA = QnAextract(groq,text)
+                print(QnA)
+                clean = extractJSON(QnA)
+                break
+            except:
+                print(f"Attempt {attempt+1} failed with error")
+                if attempt == 2:  # If this was the last attempt, re-raise the exception
+                    raise
+        key=[]
+        for k in clean.keys():
+            key.append(k)
+        # print(key[0])
+        for i,pair in enumerate(clean[key[0]]):
+            index = index + i        
+            text = pair["question"] + " " + pair["answer"]
+            # print(text)
+            response = ollama.embeddings(model="mxbai-embed-large", prompt=text)
+            embedding = response["embedding"]
+            collection.add(
+                ids=[str(index)],
+                embeddings=[embedding],
+                documents=[text]
+            )
+        index = index + 1
+        sleep(15)
     
 
 prompt = st.chat_input("Say something")
