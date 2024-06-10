@@ -27,9 +27,8 @@ def QnAextract(client, doc):
 
     1. **Identify Key Information:** Look for main points, facts, and statements in the text that can be transformed into questions.
     2. **Formulate Clear Questions:** Create questions that are clear and specific, targeting the key information.
-    3. **Provide Accurate Answers:** Ensure that the answers are precise and directly taken from the text.
+    3. **Provide Accurate Answers:** Ensure that the answers are precise and directly taken from the text. Keep the answers verbose and detailed.
     4. **Format in JSON:** Return the question-answer pairs in JSON format. Your output must be in valid JSON. Do not output anything other than the JSON. Surround your JSON output with <result> </result> tags.
-
 
 
     **Example:**
@@ -93,10 +92,11 @@ def extractJSON(res):
 client = chromadb.PersistentClient(os.getcwd())
 collections = client.list_collections()
 print(collections)
-collection = client.get_or_create_collection(name="my_collection")
+collection = client.get_or_create_collection(name="docs")
+print(collection)
 if collection.count() == 0:
     index = 0
-    for j in range(2,len(reader.pages)):
+    for j in range(2, len(reader.pages)):
         print("page: ", j)
         page = reader.pages[j] 
         text = page.extract_text()
@@ -139,7 +139,7 @@ if prompt:
     )
     results = collection.query(
         query_embeddings=[response["embedding"]],
-        n_results=1
+        n_results=3
     )
     data = results['documents'][0][0]
     chat_completion = groq.chat.completions.create(
