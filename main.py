@@ -30,7 +30,8 @@ def QnAextract(client,doc):
     1. **Identify Key Information:** Look for main points, facts, and statements in the text that can be transformed into questions.
     2. **Formulate Clear Questions:** Create questions that are clear and specific, targeting the key information.
     3. **Provide Accurate Answers:** Ensure that the answers are precise and directly taken from the text.
-    4. **Format in JSON:** Return the question-answer pairs in JSON format.
+    4. **Format in JSON:** Return the question-answer pairs in JSON format. Your output must be in valid JSON. Do not output anything other than the JSON. Surround your JSON output with <result> </result> tags.
+
 
 
     **Example:**
@@ -83,9 +84,12 @@ def extractJSON(res):
             print(json.dumps(parsed_json, indent=2))
             return parsed_json
         except json.JSONDecodeError:
-            print("The extracted text is not a valid JSON object.")
+            print('This is the response')
+            print(res)
+            raise ValueError("The extracted text is not a valid JSON object.")
     else:
-        print("No JSON object found in the text.")
+        print(res)
+        raise ValueError("No JSON object found in the text.")
 
 
 
@@ -99,16 +103,26 @@ else:
     collection = client.create_collection("docs")
     index=0
     for j in range(2,len(reader.pages)):
+        print("page: ",j)
         page = reader.pages[j] 
         text = page.extract_text()
         text = text.replace('\n',' ')
         # print(text)
-        QnA = QnAextract(groq,text)
-        clean = extractJSON(QnA)
+        for attempt in range(3):
+            try:
+                QnA = QnAextract(groq,text)
+                print(QnA)
+                clean = extractJSON(QnA)
+                break
+            except:
+                print(f"Attempt {attempt+1} failed with error")
+                if attempt == 2:  # If this was the last attempt, re-raise the exception
+                    raise
+
         for i,pair in enumerate(clean["question_answer_pairs"]):
             index = index + i        
             text = pair["question"] + " " + pair["answer"]
-            print(text)
+            # print(text)
             response = ollama.embeddings(model="mxbai-embed-large", prompt=text)
             embedding = response["embedding"]
             collection.add(
