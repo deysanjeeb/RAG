@@ -10,6 +10,7 @@ This project requires Python and several Python libraries, including `chromadb`,
 
 ```sh
 pip install -r requirements.txt
+echo "GROQ_API_KEY = 'your API key'" > .env
 ```
 
 ## Usage
