@@ -162,5 +162,3 @@ cython_debug/
 #.idea/
 
 pdfs/
-38010cc2-ab5e-4c7e-be18-96b60df2a151/
-*.sqlite3
